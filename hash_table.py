@@ -12,6 +12,9 @@ class HashTable:
         for i in range(initial_capacity):
             self.table.append([])
 
+    def __str__(self):
+        return f'{self.table}'
+
     def add(self, key: str, item):
         table_index = hash(key) % len(self.table)
         table_index_list = self.table[table_index]
