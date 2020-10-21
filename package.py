@@ -1,17 +1,19 @@
-class IllegalArgumentError(ValueError):
-    pass
+from misc import IllegalArgumentError
 
 
 class Package():
     package_id: int
     delivery_address: str
-    delivery_deadline: str
     delivery_city: str
+    delivery_state: str
     delivery_zip: int
+    delivery_deadline: str
     weight: int
+    special_notes: str
     status: str
+    delivered_time: int
 
-    def __init__(self, package_id: int, delivery_address: str, delivery_deadline: str, delivery_city: str, delivery_zip: int, weight: int, status: str):
+    def __init__(self, package_id: int, delivery_address: str, delivery_city: str, delivery_state: str, delivery_zip: int, delivery_deadline: str, weight: int, special_notes='', status='in route'):
         statuses = ['delayed on flight', 'in route', 'delivered']
 
         if (status not in statuses):
@@ -20,8 +22,17 @@ class Package():
 
         self.package_id = package_id
         self.delivery_address = delivery_address
-        self.delivery_deadline = delivery_deadline
         self.delivery_city = delivery_city
-        self.delivery_zip = delivery_zip
+        self.delivery_state = delivery_state
+        self.delivery_zip = int(delivery_zip)
+        self.delivery_deadline = delivery_deadline
         self.weight = weight
-        self.status = status
+        self.special_notes = special_notes
+        self.status = 'delayed on flight' if 'delayed' in special_notes.lower() else status
+
+    def __str__(self):
+        return f'{{ Package Id: {self.package_id}| Address: {self.delivery_address}, {self.delivery_city}, {self.delivery_state}, {self.delivery_zip}| Deadline: {self.delivery_deadline}| Weight: {self.weight}| Special Notes: {self.special_notes}| Status: {self.status} }}'
+
+    def delivered(self, minutes_past_8):
+        self.delivered_time = minutes_past_8
+        self.status = 'delivered'
