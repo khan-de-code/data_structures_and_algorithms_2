@@ -36,3 +36,6 @@ class Package():
     def delivered(self, minutes_past_8):
         self.delivered_time = minutes_past_8
         self.status = 'delivered'
+
+    def get_address_info(self):
+        return (self.delivery_address, self.delivery_city, self.delivery_state, self.delivery_zip)
