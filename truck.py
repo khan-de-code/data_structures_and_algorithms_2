@@ -1,4 +1,5 @@
 from package import Package
+from permute import permute
 
 
 class Truck:
@@ -61,9 +62,105 @@ class Truck:
         self.packages.append(package)
 
     def deliver_packages(self):
-        if self.current_location == 'HUB' and priority_packages == None:
+        if priority_packages == None:
 
+            # Helper function to calculate path length
+            def path_len(path):
+                print('path: ', path)
+                return sum(self.trip_distance_matrix[i][j] for i, j in zip(path, path[1:]))
+
+            # Set of all nodes to visit
+            to_visit = set(range(len(self.trip_distance_matrix)))
+
+            # Current state {(node, visited_nodes): shortest_path}
+            state = {(i, frozenset([0, i])): [0, i]
+                     for i in range(1, len(self.trip_distance_matrix[0]))}
+
+            for _ in range(len(self.trip_distance_matrix) - 2):
+                next_state = {}
+                for position, path in state:
+                    print(position, path, state[(position, path)])
+
+                    current_node, visited = position, path
+
+                    # Check all nodes that haven't been visited so far
+                    for node in to_visit - visited:
+                        new_path = state[(position, path)] + [node]
+                        new_pos = (node, frozenset(new_path))
+
+                        # Update if (current node, visited) is not in next state or we found shorter path
+                        if new_pos not in next_state or path_len(new_path) < path_len(next_state[new_pos]):
+                            next_state[new_pos] = new_path
+
+                state = next_state
+
+            # Find the shortest path from possible candidates
+            print(state)
+            # shortest = []
+            # for item in state:
+            #     print(state[item])
+            #     shortest = min(state[item], key=path_len)
+            shortest = min((path + [0]
+                            for path in state.values()), key=path_len)
+            print('path: {0}, length: {1}'.format(
+                shortest, path_len(shortest)))
         else:
+            def build_distance_map(iterable, start_from='HUB', end_at='HUB'):
+                for each in iterable:
+                    map = ()
+
+                    if start_from == 'HUB':
+                        first_package_address_info = each[0][0].get_address_info(
+                        )
+                        first_package_index = None
+                        for i, address in enumerate(self.all_delivery_locations):
+                            if str(first_package_address_info[3]) in address[2] and first_package_address_info[0] in address[2]:
+                                first_package_index = i
+
+                        distance_between_HUB_and_first_package = self.all_distance_matrix[
+                            0][first_package_index]
+                        map += (distance_between_HUB_and_first_package,)
+
+                    for i, package in enumerate(each[0]):
+                        if i + 1 != = len(each[0]):
+                            package1_address_info = package.get_address_info()
+                            package2_address_info = each[0][i +
+                                                            1].get_address_info()
+                            package1_index = None
+                            package2_index = None
+
+                            for address in self.trip_delivery_locations:
+                                if str(package1_address_info[3]) in address[2] and package1_address_info[0] in address[2]:
+                                    package1_index = address[0]
+                                if str(package2_address_info[3]) in address[2] and package2_address_info[0] in address[2]:
+                                    package2_index = address[0]
+
+                            distance_between_package1_and_package2 = self.trip_distance_matrix[
+                                package1_index][package2_index]
+                            map += (distance_between_package1_and_package2,)
+
+                    if end_at == 'HUB':
+                        last_package_address_info = each[0][len(
+                            each[0] - 1)].get_address_info()
+                        last_package_index = None
+                        for i, address in enumerate(self.all_delivery_locations):
+                            if str(last_package_address_info[3]) in address[2] and last_package_address_info[0] in address[2]:
+                                last_package_index = i
+
+                        distance_between_HUB_and_last_package = self.all_distance_matrix[
+                            0][first_package_index]
+                        map += (distance_between_HUB_and_last_package,)
+
+                    each.append(map)
+
+            package_permutations = []
+            for permutation in permute(self.priority_packages):
+                temp = [permutation]
+                package_permutations.append(temp)
+
+            build_distance_map(package_permutations, end_at=None)
+
+            # TODO: Iterate through permutations to find optimal route that meets package requirements
 
     def set_delivery_locations(self):
         good_rows_columns = []
@@ -87,3 +184,6 @@ class Truck:
                 temp.append(col)
 
             self.trip_distance_matrix.append(temp)
+
+        for i, location in enumerate(self.trip_delivery_locations):
+            location[0] = i
