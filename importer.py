@@ -19,12 +19,9 @@ def import_packages():
 
     package_hash = HashTable()
     for package in packages:
-        package_hash.add(int(package[0]), Package(*package))
+        package_hash.add(str(package[0]), Package(*package))
 
     return package_hash
-
-
-print(import_packages().find(25))
 
 
 def import_distances():
