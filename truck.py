@@ -124,7 +124,7 @@ class Truck:
             print('path: {0}, length: {1}'.format(
                 shortest, path_len(shortest)))
         else:
-            def build_distance_map(iterable, start_from='HUB', end_at='HUB'):
+            def __build_distance_map(iterable, start_from='HUB', end_at='HUB'):
                 for each in iterable:
                     map = ()
 
@@ -177,7 +177,7 @@ class Truck:
                 temp = [permutation]
                 package_permutations.append(temp)
 
-            build_distance_map(package_permutations, end_at=None)
+            __build_distance_map(package_permutations, end_at=None)
 
             # TODO: Iterate through permutations to find optimal route that meets package requirements
 
@@ -214,8 +214,8 @@ class Truck:
 
             self.trip_delivery_locations_priority = temp
         else:
-            self.trip_delivery_locations_priority = None
-            self.trip_distance_matrix_priority = None
+            self.trip_delivery_locations_priority = []
+            self.trip_distance_matrix_priority = []
 
         # regular
         good_rows_columns = []
