@@ -1,3 +1,6 @@
+from typing import Union, Any
+
+
 class HashTable:
     table: list
     size: int
@@ -10,7 +13,7 @@ class HashTable:
         self.size = 0
         self.capacity = initial_capacity
 
-        for i in range(initial_capacity):
+        for _ in range(initial_capacity):
             self.table.append([])
 
     def __str__(self):
@@ -27,6 +30,13 @@ class HashTable:
             yield item[0]
 
     def add(self, key: str, item):
+        """Adds a key pair to the hash table
+
+        Args:
+            key (str): The key
+            item ([Any]): The data paired with the key
+        """
+
         table_index = hash(key) % len(self.table)
         table_index_list = self.table[table_index]
 
@@ -40,7 +50,16 @@ class HashTable:
         if self.size > self.capacity * self.resize_percentage:
             self.__resize()
 
-    def find(self, key: str):
+    def find(self, key: str) -> Union[Any, None]:
+        """Finds any element in the hash table if it exists
+
+        Args:
+            key (str): The key to search for
+
+        Returns:
+            [Any, None]: Returns the key pair if it exists or None if it does not.
+        """
+
         table_index = hash(key) % len(self.table)
         table_index_list = self.table[table_index]
 
@@ -51,6 +70,11 @@ class HashTable:
             return None
 
     def remove(self, key: str):
+        """Removes a key pair from the hash table
+
+        Args:
+            key (str): The key for the key pair you want to remove
+        """
         table_index = hash(key) % len(self.table)
         table_index_list = self.table[table_index]
 
@@ -67,7 +91,7 @@ class HashTable:
                 temp_store_for_values.append(item)
 
         self.table = []
-        for i in range(self.capacity):
+        for _ in range(self.capacity):
             self.table.append([])
 
         self.size = 0
