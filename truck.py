@@ -1,8 +1,17 @@
 from package import Package
 from permute import permute
+from typing import Union
 
 
 class Truck:
+    """Initilizes a truck
+
+    Args:
+        number (int): The number of the truck
+        regular_packages ([Package]):
+        all_delivery_locations ([[str, int]]): [description]
+        priority_packages ([Package], optional): [description]. Defaults to None.
+    """
     number: int
     priority_packages: [Package]
     regular_packages: [Package]
@@ -10,20 +19,25 @@ class Truck:
     current_location: str
     all_delivery_locations: [tuple]
     all_distance_matrix: [[float]]
-    trip_delivery_locations: [tuple]
-    trip_distance_matrix: [[float]]
+    trip_delivery_locations_priority: [tuple]
+    trip_delivery_locations_regular: [tuple]
+    trip_distance_matrix_priority: [[float]]
+    trip_distance_matrix_regular: [[float]]
 
     def __init__(self, number: int, regular_packages: [Package], all_delivery_locations, priority_packages=None):
+
         self.number = number
         self.priority_packages = priority_packages
         self.regular_packages = regular_packages
         self.distance_traveled = 0
         self.current_location = 'HUB'
-        self.trip_delivery_locations = []
-        self.trip_distance_matrix = []
+        self.trip_delivery_locations_priority = []
+        self.trip_delivery_locations_regular = []
+        self.trip_distance_matrix_priority = []
+        self.trip_distance_matrix_regular = []
 
         self.all_delivery_locations = []
-        for i, row in enumerate(test):
+        for i, row in enumerate(all_delivery_locations):
             j = 0
             while j < len(row) - 1:
                 if i == 0 or j > 1:
@@ -56,13 +70,18 @@ class Truck:
                 self.all_distance_matrix[i][j] = float(
                     self.all_distance_matrix[i][j])
 
-        self.set_delivery_locations()
+        self.__set_delivery_locations()
 
-    def load_package(self, package):
-        self.packages.append(package)
+    def load_package(self, package: Package, type: str):
+        if type == 'regular':
+            self.regular_packages.append(package)
+        if type == 'priority':
+            self.priority_packages.append(package)
+
+        self.__set_delivery_locations()
 
     def deliver_packages(self):
-        if priority_packages == None:
+        if self.priority_packages == None:
 
             # Helper function to calculate path length
             def path_len(path):
@@ -122,7 +141,7 @@ class Truck:
                         map += (distance_between_HUB_and_first_package,)
 
                     for i, package in enumerate(each[0]):
-                        if i + 1 != = len(each[0]):
+                        if i + 1 != len(each[0]):
                             package1_address_info = package.get_address_info()
                             package2_address_info = each[0][i +
                                                             1].get_address_info()
@@ -162,15 +181,51 @@ class Truck:
 
             # TODO: Iterate through permutations to find optimal route that meets package requirements
 
-    def set_delivery_locations(self):
+    def __set_delivery_locations(self):
         good_rows_columns = []
 
-        for package in self.packages:
+        # priority
+        if len(self.priority_packages) > 0:
+            for package in [*self.priority_packages]:
+                for row in self.all_delivery_locations:
+                    if str(package.delivery_zip) in row[2] and package.delivery_address.lower() in row[2].lower():
+                        if row[0] not in good_rows_columns:
+                            good_rows_columns.append(row[0])
+                            self.trip_delivery_locations_priority.append(
+                                list(row))
+
+            for i, row in enumerate(self.all_distance_matrix):
+                temp = []
+                if i not in good_rows_columns:
+                    continue
+
+                for j, col in enumerate(row):
+                    if j not in good_rows_columns:
+                        continue
+
+                    temp.append(col)
+
+                self.trip_distance_matrix_priority.append(temp)
+
+            temp = []
+            for i, location in enumerate(self.trip_delivery_locations_priority):
+                location[0] = i
+                temp.append(tuple(location))
+
+            self.trip_delivery_locations_priority = temp
+        else:
+            self.trip_delivery_locations_priority = None
+            self.trip_distance_matrix_priority = None
+
+        # regular
+        good_rows_columns = []
+
+        for package in [*self.regular_packages]:
             for row in self.all_delivery_locations:
-                if str(package.delivery_zip) in row[2] and package.delivery_address in row[2].lower():
+                if str(package.delivery_zip) in row[2] and package.delivery_address.lower() in row[2].lower():
                     if row[0] not in good_rows_columns:
                         good_rows_columns.append(row[0])
-                        self.trip_delivery_locations.append(list(row))
+                        self.trip_delivery_locations_regular.append(list(row))
 
         for i, row in enumerate(self.all_distance_matrix):
             temp = []
@@ -183,7 +238,11 @@ class Truck:
 
                 temp.append(col)
 
-            self.trip_distance_matrix.append(temp)
+            self.trip_distance_matrix_regular.append(temp)
 
-        for i, location in enumerate(self.trip_delivery_locations):
+        temp = []
+        for i, location in enumerate(self.trip_delivery_locations_regular):
             location[0] = i
+            temp.append(tuple(location))
+
+        self.trip_delivery_locations_regular = temp
