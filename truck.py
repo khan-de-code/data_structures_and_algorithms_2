@@ -86,16 +86,16 @@ class Truck:
             # Helper function to calculate path length
             def path_len(path):
                 print('path: ', path)
-                return sum(self.trip_distance_matrix[i][j] for i, j in zip(path, path[1:]))
+                return sum(self.trip_distance_matrix_regular[i][j] for i, j in zip(path, path[1:]))
 
             # Set of all nodes to visit
-            to_visit = set(range(len(self.trip_distance_matrix)))
+            to_visit = set(range(len(self.trip_distance_matrix_regular)))
 
             # Current state {(node, visited_nodes): shortest_path}
             state = {(i, frozenset([0, i])): [0, i]
-                     for i in range(1, len(self.trip_distance_matrix[0]))}
+                     for i in range(1, len(self.trip_distance_matrix_regular[0]))}
 
-            for _ in range(len(self.trip_distance_matrix) - 2):
+            for _ in range(len(self.trip_distance_matrix_regular) - 2):
                 next_state = {}
                 for position, path in state:
                     print(position, path, state[(position, path)])
@@ -119,10 +119,8 @@ class Truck:
             # for item in state:
             #     print(state[item])
             #     shortest = min(state[item], key=path_len)
-            shortest = min((path + [0]
-                            for path in state.values()), key=path_len)
-            print('path: {0}, length: {1}'.format(
-                shortest, path_len(shortest)))
+            shortest = min((path + [0] for path in state.values()), key=path_len)
+            print('path: {0}, length: {1}'.format(shortest, path_len(shortest)))
         else:
             def __build_distance_map(iterable, start_from='HUB', end_at='HUB'):
                 for each in iterable:
@@ -185,7 +183,7 @@ class Truck:
         good_rows_columns = []
 
         # priority
-        if len(self.priority_packages) > 0:
+        if self.priority_packages != None and len(self.priority_packages) > 0:
             for package in [*self.priority_packages]:
                 for row in self.all_delivery_locations:
                     if str(package.delivery_zip) in row[2] and package.delivery_address.lower() in row[2].lower():
@@ -220,12 +218,23 @@ class Truck:
         # regular
         good_rows_columns = []
 
-        for package in [*self.regular_packages]:
-            for row in self.all_delivery_locations:
+        packages = [*self.regular_packages]
+        for row in self.all_delivery_locations:
+            for package in packages:
                 if str(package.delivery_zip) in row[2] and package.delivery_address.lower() in row[2].lower():
                     if row[0] not in good_rows_columns:
                         good_rows_columns.append(row[0])
                         self.trip_delivery_locations_regular.append(list(row))
+                        packages.remove(package)
+
+        if self.priority_packages == None:
+            temp = []
+            for location in self.trip_delivery_locations_regular:
+                temp.append([location[0] + 1, location[1:]])
+
+            self.trip_delivery_locations_regular = temp
+            self.trip_delivery_locations_regular.insert(0, [0, [*self.all_delivery_locations[0][1:]]])
+            good_rows_columns.insert(0, 0)
 
         for i, row in enumerate(self.all_distance_matrix):
             temp = []
