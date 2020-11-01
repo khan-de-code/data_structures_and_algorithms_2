@@ -67,8 +67,7 @@ class Truck:
 
         for i, row in enumerate(self.all_distance_matrix):
             for j, col in enumerate(row):
-                self.all_distance_matrix[i][j] = float(
-                    self.all_distance_matrix[i][j])
+                self.all_distance_matrix[i][j] = float(self.all_distance_matrix[i][j])
 
         self.__set_delivery_locations()
 
@@ -127,22 +126,19 @@ class Truck:
                     map = ()
 
                     if start_from == 'HUB':
-                        first_package_address_info = each[0][0].get_address_info(
-                        )
+                        first_package_address_info = each[0][0].get_address_info()
                         first_package_index = None
                         for i, address in enumerate(self.all_delivery_locations):
                             if str(first_package_address_info[3]) in address[2] and first_package_address_info[0] in address[2]:
                                 first_package_index = i
 
-                        distance_between_HUB_and_first_package = self.all_distance_matrix[
-                            0][first_package_index]
+                        distance_between_HUB_and_first_package = self.all_distance_matrix[0][first_package_index]
                         map += (distance_between_HUB_and_first_package,)
 
                     for i, package in enumerate(each[0]):
                         if i + 1 != len(each[0]):
                             package1_address_info = package.get_address_info()
-                            package2_address_info = each[0][i +
-                                                            1].get_address_info()
+                            package2_address_info = each[0][i + 1].get_address_info()
                             package1_index = None
                             package2_index = None
 
@@ -152,8 +148,7 @@ class Truck:
                                 if str(package2_address_info[3]) in address[2] and package2_address_info[0] in address[2]:
                                     package2_index = address[0]
 
-                            distance_between_package1_and_package2 = self.trip_distance_matrix[
-                                package1_index][package2_index]
+                            distance_between_package1_and_package2 = self.trip_distance_matrix[package1_index][package2_index]
                             map += (distance_between_package1_and_package2,)
 
                     if end_at == 'HUB':
@@ -164,8 +159,7 @@ class Truck:
                             if str(last_package_address_info[3]) in address[2] and last_package_address_info[0] in address[2]:
                                 last_package_index = i
 
-                        distance_between_HUB_and_last_package = self.all_distance_matrix[
-                            0][first_package_index]
+                        distance_between_HUB_and_last_package = self.all_distance_matrix[0][first_package_index]
                         map += (distance_between_HUB_and_last_package,)
 
                     each.append(map)
