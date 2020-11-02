@@ -121,12 +121,15 @@ class Truck:
             shortest = min((path + [0] for path in state.values()), key=path_len)
             print('path: {0}, length: {1}'.format(shortest, path_len(shortest)))
         else:
-            def __build_distance_map(iterable, start_from='HUB', end_at='HUB'):
+            def __build_distance_map(iterable, package_type, start_from='HUB', end_at='HUB'):
+                map_array = []
+
                 for each in iterable:
                     map = ()
 
+                    # Distance from hub to first package
                     if start_from == 'HUB':
-                        first_package_address_info = each[0][0].get_address_info()
+                        first_package_address_info = each[0].get_address_info()
                         first_package_index = None
                         for i, address in enumerate(self.all_delivery_locations):
                             if str(first_package_address_info[3]) in address[2] and first_package_address_info[0] in address[2]:
@@ -135,43 +138,63 @@ class Truck:
                         distance_between_HUB_and_first_package = self.all_distance_matrix[0][first_package_index]
                         map += (distance_between_HUB_and_first_package,)
 
-                    for i, package in enumerate(each[0]):
-                        if i + 1 != len(each[0]):
+                    # Distances between each package
+                    for i, package in enumerate(each):
+                        if i + 1 != len(each):
                             package1_address_info = package.get_address_info()
-                            package2_address_info = each[0][i + 1].get_address_info()
+                            package2_address_info = each[i + 1].get_address_info()
                             package1_index = None
                             package2_index = None
 
-                            for address in self.trip_delivery_locations:
+                            delivery_locations = self.trip_delivery_locations_priority if package_type == 'priority' else self.trip_delivery_locations_regular
+                            for address in delivery_locations:
                                 if str(package1_address_info[3]) in address[2] and package1_address_info[0] in address[2]:
                                     package1_index = address[0]
                                 if str(package2_address_info[3]) in address[2] and package2_address_info[0] in address[2]:
                                     package2_index = address[0]
 
-                            distance_between_package1_and_package2 = self.trip_distance_matrix[package1_index][package2_index]
+                            trip_distance_matrix = self.trip_distance_matrix_priority if package_type == 'priority' else self.trip_distance_matrix_regular
+                            distance_between_package1_and_package2 = trip_distance_matrix[package1_index][package2_index]
                             map += (distance_between_package1_and_package2,)
 
                     if end_at == 'HUB':
-                        last_package_address_info = each[0][len(
-                            each[0] - 1)].get_address_info()
+                        last_package_address_info = each[len(each) - 1].get_address_info()
                         last_package_index = None
                         for i, address in enumerate(self.all_delivery_locations):
                             if str(last_package_address_info[3]) in address[2] and last_package_address_info[0] in address[2]:
                                 last_package_index = i
 
-                        distance_between_HUB_and_last_package = self.all_distance_matrix[0][first_package_index]
+                        distance_between_HUB_and_last_package = self.all_distance_matrix[0][last_package_index]
                         map += (distance_between_HUB_and_last_package,)
 
-                    each.append(map)
+                    map_array.append(map)
 
-            package_permutations = []
+                return map_array
+
+            # Priority packages
+            priority_package_permutations = []
             for permutation in permute(self.priority_packages):
-                temp = [permutation]
-                package_permutations.append(temp)
+                priority_package_permutations.append(permutation)
 
-            __build_distance_map(package_permutations, end_at=None)
+            priority_distance_map = __build_distance_map(priority_package_permutations, 'priority', end_at=None)
+            priority_package_permutations = [('HUB',) + elem for elem in priority_package_permutations]
+
+            # Regular packages
+            regular_package_permutations = []
+            for permutation in permute(self.regular_packages):
+                regular_package_permutations.append(permutation)
+
+            regular_distance_map = __build_distance_map(regular_package_permutations, 'regular', start_from=None)
+            regular_package_permutations = [elem + ('HUB',) for elem in priority_package_permutations]
 
             # TODO: Iterate through permutations to find optimal route that meets package requirements
+
+            def __calculate_minutes_travel(distance: int):
+                return distance * (18 / 60)
+
+            def __deadline_to_minutes_from_8(deadline: str):
+
+            print(__calculate_minutes_travel(12))
 
     def __set_delivery_locations(self):
         good_rows_columns = []
