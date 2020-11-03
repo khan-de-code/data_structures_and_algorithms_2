@@ -1,6 +1,8 @@
 from package import Package
 from permute import permute
 from typing import Union
+from _time import Time
+import functools
 
 
 class Truck:
@@ -12,6 +14,8 @@ class Truck:
         all_delivery_locations ([[str, int]]): [description]
         priority_packages ([Package], optional): [description]. Defaults to None.
     """
+
+    time: Time
     number: int
     priority_packages: [Package]
     regular_packages: [Package]
@@ -26,6 +30,7 @@ class Truck:
 
     def __init__(self, number: int, regular_packages: [Package], all_delivery_locations, priority_packages=None):
 
+        self.time = Time(8, 0, 'AM')
         self.number = number
         self.priority_packages = priority_packages
         self.regular_packages = regular_packages
@@ -178,6 +183,7 @@ class Truck:
 
             priority_distance_map = __build_distance_map(priority_package_permutations, 'priority', end_at=None)
             priority_package_permutations = [('HUB',) + elem for elem in priority_package_permutations]
+            priority_combined = [[priority_distance_map[x], priority_package_permutations[x]] for x in range(len(priority_distance_map))]
 
             # Regular packages
             regular_package_permutations = []
@@ -185,16 +191,56 @@ class Truck:
                 regular_package_permutations.append(permutation)
 
             regular_distance_map = __build_distance_map(regular_package_permutations, 'regular', start_from=None)
-            regular_package_permutations = [elem + ('HUB',) for elem in priority_package_permutations]
+            regular_package_permutations = [elem + ('HUB',) for elem in regular_package_permutations]
+            regular_combined = [[regular_distance_map[x], regular_package_permutations[x]] for x in range(len(regular_distance_map))]
 
-            # TODO: Iterate through permutations to find optimal route that meets package requirements
+            def __calculate_minutes_travel(distance: int) -> float:
+                return distance / (18 / 60)
 
-            def __calculate_minutes_travel(distance: int):
-                return distance * (18 / 60)
+            for x, path in enumerate(priority_combined):
+                test_time = self.time.clone()
+                delivered_at = [test_time.clone()]
+                total_distance = 0
+                for i, distance in enumerate(path[0]):
+                    destination_a = path[1][i]
+                    destination_b = path[1][i + 1]
 
-            def __deadline_to_minutes_from_8(deadline: str):
+                    mins_traveled = __calculate_minutes_travel(distance)
+                    test_time.add_time(minute=int(mins_traveled), fractions_of_a_minute=mins_traveled - int(mins_traveled))
+                    delivered_at.append(test_time.clone())
 
-            print(__calculate_minutes_travel(12))
+                    total_distance += distance
+
+                priority_combined[x].append(tuple(delivered_at))
+                priority_combined[x].append(total_distance)
+
+            def __sort_combined(a, b):
+                if a[3] > b[3]:
+                    return 1
+                elif a[3] < b[3]:
+                    return -1
+                else:
+                    return 0
+
+            priority_combined.sort(key=functools.cmp_to_key(__sort_combined))
+
+            priority_path_length = 0
+            time_elapsed = None
+            for path in priority_combined:
+                onto_next = False
+                for i, package in enumerate(path[1]):
+                    if package == 'HUB':
+                        continue
+
+                    if not package.delivery_deadline.minutes_from_8 > path[2][i].minutes_from_8:
+                        onto_next = True
+                        break
+                if not onto_next:
+                    priority_path_length = path[3]
+                    time_elapsed = __calculate_minutes_travel(priority_path_length)
+                    break
+
+            print()
 
     def __set_delivery_locations(self):
         good_rows_columns = []
