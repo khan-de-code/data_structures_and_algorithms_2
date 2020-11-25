@@ -20,7 +20,7 @@ class Vertex:
 class Graph:
     adjacency_list: HashTable
     edge_weights: HashTable
-    vertecies_in_graph: list
+    vertecies_in_graph: [Vertex]
 
     def __init__(self):
         self.adjacency_list = HashTable()
@@ -31,7 +31,7 @@ class Graph:
         self.adjacency_list.add(new_vertex_key, [])
         self.vertecies_in_graph.append(new_vertex_key)
 
-    def add_directed_edge(self, from_vertex_key, to_vertex_key, weight=1.0):
+    def add_directed_edge(self, from_vertex_key, to_vertex_key, weight):
         if from_vertex_key not in self.vertecies_in_graph:
             raise IllegalArgumentError(
                 f"'{from_vertex_key.name}' does not exist in the graph")

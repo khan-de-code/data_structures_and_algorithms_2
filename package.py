@@ -4,6 +4,23 @@ from typing import Union
 
 
 class Package():
+    """Initialize a package
+
+    Args:
+        package_id (int): The id of the package
+        delivery_address (str): The address the package is to be delivered to
+        delivery_city (str): The city the package is to be delivered to
+        delivery_state (str): The state the package is to be delivered to
+        delivery_zip (int): The zip code the package is to be delivered to
+        delivery_deadline (str): The deadline by which the package must be delivered
+        weight (int): The weight of the package
+        special_notes (str, optional): Special notes for the package. Defaults to ''.
+        status (str, optional): The current status of the package. Defaults to 'in route'.
+
+    Raises:
+        IllegalArgumentError: Raised if the provided status is not a valid status
+    """
+
     package_id: int
     delivery_address: str
     delivery_city: str
@@ -55,12 +72,13 @@ class Package():
         self.weight = weight
         self.special_notes = special_notes
         self.status = 'delayed on flight' if 'delayed' in special_notes.lower() else status
+        self.delivered_time = None
 
     def __str__(self):
         return f'{{ Package Id: {self.package_id}| Address: {self.delivery_address}, {self.delivery_city}, {self.delivery_state}, {self.delivery_zip}| Deadline: {self.delivery_deadline}| Weight: {self.weight}| Special Notes: {self.special_notes}| Status: {self.status} }}'
 
-    def delivered(self, minutes_past_8):
-        self.delivered_time = minutes_past_8
+    def delivered(self, time):
+        self.delivered_time = time
         self.status = 'delivered'
 
     def get_address_info(self):

@@ -46,14 +46,18 @@ class Time:
 
         self.__minutes_from_8()
 
-    def add_time(self, hour=None, minute=None, fractions_of_a_minute=None):
+    def add_time(self, hour=None, minute=None, fractions_of_a_minute=None, minutes_with_fractions=None):
         """Adds to the existing time
 
         Args:
             hour (int, optional): The Hour. Defaults to None.
             minute (int, optional): The Minute. Defaults to None.
             fractions_of_a_minute (float, optional): Fractions of a minute. Defaults to None.
+            minutes_with_fractions (float, optional): Minutes with fractions of a minute. Defaults to None.
         """
+        if (minutes_with_fractions != None and minute == None and fractions_of_a_minute == None):
+            minute = int(minutes_with_fractions)
+            fractions_of_a_minute = minutes_with_fractions - minute
 
         if fractions_of_a_minute != None:
             self.minute += int(self.fractions_of_a_minute + fractions_of_a_minute)
@@ -93,3 +97,8 @@ class Time:
 
         if self.am_pm == 'PM':
             self.minutes_from_8 += 12 * 60
+
+    def __str__(self):
+        hour = self.hour if self.hour > 9 else f'0{self.hour}'
+        minute = self.minute if self.minute > 9 else f'0{self.minute}'
+        return f'{hour}:{minute} {self.am_pm}'

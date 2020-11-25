@@ -2,7 +2,9 @@ from package import Package
 from permute import permute
 from typing import Union
 from _time import Time
+from hash_table import HashTable
 import functools
+from graph import Graph, Vertex
 
 
 class Truck:
@@ -20,7 +22,6 @@ class Truck:
     priority_packages: [Package]
     regular_packages: [Package]
     distance_traveled: float
-    current_location: str
     all_delivery_locations: [tuple]
     all_distance_matrix: [[float]]
     trip_delivery_locations_priority: [tuple]
@@ -28,14 +29,16 @@ class Truck:
     trip_distance_matrix_priority: [[float]]
     trip_distance_matrix_regular: [[float]]
 
-    def __init__(self, number: int, regular_packages: [Package], all_delivery_locations, priority_packages=None):
+    def __init__(self, number: int, regular_packages: [Package], all_delivery_locations, priority_packages=None, departure_time='default'):
 
-        self.time = Time(8, 0, 'AM')
+        if departure_time == 'default':
+            self.time = Time(8, 0, 'AM')
+        else:
+            self.time = departure_time
         self.number = number
         self.priority_packages = priority_packages
         self.regular_packages = regular_packages
         self.distance_traveled = 0
-        self.current_location = 'HUB'
         self.trip_delivery_locations_priority = []
         self.trip_delivery_locations_regular = []
         self.trip_distance_matrix_priority = []
@@ -74,175 +77,184 @@ class Truck:
             for j, col in enumerate(row):
                 self.all_distance_matrix[i][j] = float(self.all_distance_matrix[i][j])
 
-        self.__set_delivery_locations()
+        if len(self.regular_packages) != 0:
+            self.__set_delivery_locations()
 
-    def load_package(self, package: Package, type: str):
+    def load_packages(self, packages: [Package], type: str):
         if type == 'regular':
-            self.regular_packages.append(package)
+            for package in packages:
+                self.regular_packages.append(package)
         if type == 'priority':
-            self.priority_packages.append(package)
+            for package in packages:
+                self.priority_packages.append(package)
 
         self.__set_delivery_locations()
 
     def deliver_packages(self):
-        if self.priority_packages == None:
+        def __calculate_minutes_travel(distance: float) -> float:
+            return distance / (18 / 60)
 
-            # Helper function to calculate path length
-            def path_len(path):
-                print('path: ', path)
-                return sum(self.trip_distance_matrix_regular[i][j] for i, j in zip(path, path[1:]))
+        def nearest_neighbor(graph: Graph, start_vertex: Vertex, end_vertex: Union[Vertex, str], packages: [Package]):
+            """Finds the greedy shortest path
 
-            # Set of all nodes to visit
-            to_visit = set(range(len(self.trip_distance_matrix_regular)))
+            Args:
+                graph (Graph)
+                start_vertex (Vertex): The vertex to start at
+                end_vertex (Union[Vertex, str]): Could either be a vertex to stop at or a string. If string equals 'round trip', will calculate a round trip. If string equals 'one way' will calculate one way 
 
-            # Current state {(node, visited_nodes): shortest_path}
-            state = {(i, frozenset([0, i])): [0, i]
-                     for i in range(1, len(self.trip_distance_matrix_regular[0]))}
+            Returns:
+                (int, tuple[Vertex]): Returns the distance traveled and a tuple of the order of visited vertecies
+            """
 
-            for _ in range(len(self.trip_distance_matrix_regular) - 2):
-                next_state = {}
-                for position, path in state:
-                    print(position, path, state[(position, path)])
+            distance_traveled = 0
+            vertecies_visited = [start_vertex]
+            vertecies_yet_to_visit = list(filter(lambda x: x != start_vertex, graph.vertecies_in_graph))
 
-                    current_node, visited = position, path
+            current_vertex = start_vertex
 
-                    # Check all nodes that haven't been visited so far
-                    for node in to_visit - visited:
-                        new_path = state[(position, path)] + [node]
-                        new_pos = (node, frozenset(new_path))
+            def shortest_edge(from_vertex):
+                current_vertex_neighbors = graph.adjacency_list.find(current_vertex)
+                shortest_edge_length = float('inf')
+                shortest_to_vertex = None
 
-                        # Update if (current node, visited) is not in next state or we found shorter path
-                        if new_pos not in next_state or path_len(new_path) < path_len(next_state[new_pos]):
-                            next_state[new_pos] = new_path
+                for to_vertex in current_vertex_neighbors:
+                    length = graph.edge_weights.find((from_vertex, to_vertex))
 
-                state = next_state
+                    if length < shortest_edge_length and to_vertex not in vertecies_visited:
+                        if end_vertex != 'round trip' and end_vertex != 'one way' and to_vertex == end_vertex:
+                            continue
+                        else:
+                            shortest_edge_length = length
+                            shortest_to_vertex = to_vertex
 
-            # Find the shortest path from possible candidates
-            print(state)
-            # shortest = []
-            # for item in state:
-            #     print(state[item])
-            #     shortest = min(state[item], key=path_len)
-            shortest = min((path + [0] for path in state.values()), key=path_len)
-            print('path: {0}, length: {1}'.format(shortest, path_len(shortest)))
-        else:
-            def __build_distance_map(iterable, package_type, start_from='HUB', end_at='HUB'):
-                map_array = []
+                return shortest_to_vertex, shortest_edge_length
 
-                for each in iterable:
-                    map = ()
-
-                    # Distance from hub to first package
-                    if start_from == 'HUB':
-                        first_package_address_info = each[0].get_address_info()
-                        first_package_index = None
-                        for i, address in enumerate(self.all_delivery_locations):
-                            if str(first_package_address_info[3]) in address[2] and first_package_address_info[0] in address[2]:
-                                first_package_index = i
-
-                        distance_between_HUB_and_first_package = self.all_distance_matrix[0][first_package_index]
-                        map += (distance_between_HUB_and_first_package,)
-
-                    # Distances between each package
-                    for i, package in enumerate(each):
-                        if i + 1 != len(each):
-                            package1_address_info = package.get_address_info()
-                            package2_address_info = each[i + 1].get_address_info()
-                            package1_index = None
-                            package2_index = None
-
-                            delivery_locations = self.trip_delivery_locations_priority if package_type == 'priority' else self.trip_delivery_locations_regular
-                            for address in delivery_locations:
-                                if str(package1_address_info[3]) in address[2] and package1_address_info[0] in address[2]:
-                                    package1_index = address[0]
-                                if str(package2_address_info[3]) in address[2] and package2_address_info[0] in address[2]:
-                                    package2_index = address[0]
-
-                            trip_distance_matrix = self.trip_distance_matrix_priority if package_type == 'priority' else self.trip_distance_matrix_regular
-                            distance_between_package1_and_package2 = trip_distance_matrix[package1_index][package2_index]
-                            map += (distance_between_package1_and_package2,)
-
-                    if end_at == 'HUB':
-                        last_package_address_info = each[len(each) - 1].get_address_info()
-                        last_package_index = None
-                        for i, address in enumerate(self.all_delivery_locations):
-                            if str(last_package_address_info[3]) in address[2] and last_package_address_info[0] in address[2]:
-                                last_package_index = i
-
-                        distance_between_HUB_and_last_package = self.all_distance_matrix[0][last_package_index]
-                        map += (distance_between_HUB_and_last_package,)
-
-                    map_array.append(map)
-
-                return map_array
-
-            # Priority packages
-            priority_package_permutations = []
-            for permutation in permute(self.priority_packages):
-                priority_package_permutations.append(permutation)
-
-            priority_distance_map = __build_distance_map(priority_package_permutations, 'priority', end_at=None)
-            priority_package_permutations = [('HUB',) + elem for elem in priority_package_permutations]
-            priority_combined = [[priority_distance_map[x], priority_package_permutations[x]] for x in range(len(priority_distance_map))]
-
-            # Regular packages
-            regular_package_permutations = []
-            for permutation in permute(self.regular_packages):
-                regular_package_permutations.append(permutation)
-
-            regular_distance_map = __build_distance_map(regular_package_permutations, 'regular', start_from=None)
-            regular_package_permutations = [elem + ('HUB',) for elem in regular_package_permutations]
-            regular_combined = [[regular_distance_map[x], regular_package_permutations[x]] for x in range(len(regular_distance_map))]
-
-            def __calculate_minutes_travel(distance: int) -> float:
-                return distance / (18 / 60)
-
-            for x, path in enumerate(priority_combined):
-                test_time = self.time.clone()
-                delivered_at = [test_time.clone()]
-                total_distance = 0
-                for i, distance in enumerate(path[0]):
-                    destination_a = path[1][i]
-                    destination_b = path[1][i + 1]
-
-                    mins_traveled = __calculate_minutes_travel(distance)
-                    test_time.add_time(minute=int(mins_traveled), fractions_of_a_minute=mins_traveled - int(mins_traveled))
-                    delivered_at.append(test_time.clone())
-
-                    total_distance += distance
-
-                priority_combined[x].append(tuple(delivered_at))
-                priority_combined[x].append(total_distance)
-
-            def __sort_combined(a, b):
-                if a[3] > b[3]:
-                    return 1
-                elif a[3] < b[3]:
-                    return -1
-                else:
-                    return 0
-
-            priority_combined.sort(key=functools.cmp_to_key(__sort_combined))
-
-            priority_path_length = 0
-            time_elapsed = None
-            for path in priority_combined:
-                onto_next = False
-                for i, package in enumerate(path[1]):
-                    if package == 'HUB':
-                        continue
-
-                    if not package.delivery_deadline.minutes_from_8 > path[2][i].minutes_from_8:
-                        onto_next = True
-                        break
-                if not onto_next:
-                    priority_path_length = path[3]
-                    time_elapsed = __calculate_minutes_travel(priority_path_length)
+            while len(vertecies_yet_to_visit) != 0:
+                if end_vertex != 'round trip' and end_vertex != 'one way' and len(vertecies_yet_to_visit) == 1:
                     break
+                current_vertex, distance = shortest_edge(current_vertex)
+                delivered_packages: [Package] = list(filter(lambda package: str(package.delivery_zip)
+                                                            in current_vertex.name[2] and package.delivery_address in current_vertex.name[2], packages))
 
-            print()
+                travel_time = __calculate_minutes_travel(distance)
+                self.time.add_time(minutes_with_fractions=travel_time)
+                for package in delivered_packages:
+                    package.delivered(self.time.clone())
+
+                distance_traveled += distance
+
+                vertecies_yet_to_visit.remove(current_vertex)
+                vertecies_visited.append(current_vertex)
+
+            if end_vertex == 'round trip':
+                distance = graph.edge_weights.find((current_vertex, start_vertex))
+                distance_traveled += distance
+                vertecies_visited.append(start_vertex)
+
+                travel_time = __calculate_minutes_travel(distance)
+                self.time.add_time(minutes_with_fractions=travel_time)
+
+            elif end_vertex != 'round trip' and end_vertex != 'one way':
+                distance = graph.edge_weights.find((current_vertex, end_vertex))
+                distance_traveled += distance
+                vertecies_visited.append(end_vertex)
+
+                travel_time = __calculate_minutes_travel(distance)
+                self.time.add_time(minutes_with_fractions=travel_time)
+
+                if (end_vertex.name[2] != 'HUB'):
+                    delivered_package: Package = list(filter(lambda package: str(package.delivery_zip)
+                                                             in current_vertex.name[2] and package.delivery_address in current_vertex.name[2], [end_vertex]))[0]
+                    delivered_package.delivered(self.time.clone())
+
+            self.distance_traveled += distance_traveled
+
+            return distance_traveled, tuple(vertecies_visited)
+
+        def generate_graph(addresses: [str], distances: [float]) -> Graph:
+            graph = Graph()
+            vertecies = []
+            for address in addresses:
+                vertex = Vertex(address)
+                vertecies.append(vertex)
+                graph.add_vertex(vertex)
+
+            while len(vertecies) > 0:
+                current_address = vertecies.pop()
+                current_address_index = addresses.index(current_address.name)
+                for address in vertecies:
+                    address_index = addresses.index(address.name)
+                    distance = distances[current_address_index][address_index]
+
+                    graph.add_undirected_edge(current_address, address, distance)
+
+            return graph
+
+        priority_graph = generate_graph(self.trip_delivery_locations_priority, self.trip_distance_matrix_priority)
+        regular_graph = generate_graph(self.trip_delivery_locations_regular, self.trip_distance_matrix_regular)
+
+        if len(priority_graph.vertecies_in_graph) == 0:
+            hub_vertex = None
+            for vertex in regular_graph.vertecies_in_graph:
+                if vertex.name[2] == 'HUB':
+                    hub_vertex = vertex
+
+            result = nearest_neighbor(regular_graph, hub_vertex, 'round trip', self.regular_packages)
+
+        elif len(regular_graph.vertecies_in_graph) == 0:
+            hub_vertex = None
+            for vertex in priority_graph.vertecies_in_graph:
+                if vertex.name[2] == 'HUB':
+                    hub_vertex = vertex
+
+            result = nearest_neighbor(priority_graph, hub_vertex, 'round trip', self.priority_packages)
+
+        else:
+            hub_vertex_priority_start = None
+            for vertex in priority_graph.vertecies_in_graph:
+                if vertex.name[2] == 'HUB':
+                    hub_vertex_priority_start = vertex
+
+            hub_vertex_regular_end = None
+            for vertex in regular_graph.vertecies_in_graph:
+                if vertex.name[2] == 'HUB':
+                    hub_vertex_regular_end = vertex
+
+            result_priority = nearest_neighbor(priority_graph, hub_vertex_priority_start, 'one way', self.priority_packages)
+
+            last_priority_vertex = result_priority[1][-1]
+
+            all_locations_last_priority_index = list(
+                filter(lambda x: last_priority_vertex.name[1] == x[1], self.all_delivery_locations))[0][0]
+            all_loacations_regular_index = []
+            for regular_vertex in regular_graph.vertecies_in_graph:
+                for location in self.all_delivery_locations:
+                    if regular_vertex.name[1] == location[1]:
+                        all_loacations_regular_index.append(location[0])
+
+            regular_graph.add_vertex(last_priority_vertex)
+            for i, vertex in enumerate(regular_graph.vertecies_in_graph):
+                if vertex != regular_graph.vertecies_in_graph[-1]:
+                    regular_graph.add_undirected_edge(
+                        last_priority_vertex, vertex, self.all_distance_matrix[all_locations_last_priority_index][all_loacations_regular_index[i]])
+
+            hub_end = list(filter(lambda x: x.name[2] == 'HUB', regular_graph.vertecies_in_graph))[0]
+
+            result_regular = nearest_neighbor(regular_graph, last_priority_vertex, hub_end, self.regular_packages)
+
+        self.priority_packages = []
+        self.regular_packages = []
+        self.trip_delivery_locations_priority = []
+        self.trip_delivery_locations_regular = []
+        self.trip_distance_matrix_priority = []
+        self.trip_distance_matrix_regular = []
 
     def __set_delivery_locations(self):
+        self.trip_delivery_locations_regular = []
+        self.trip_distance_matrix_regular = []
+        self.trip_delivery_locations_priority = []
+        self.trip_distance_matrix_priority = []
+
         good_rows_columns = []
 
         # priority
@@ -252,8 +264,11 @@ class Truck:
                     if str(package.delivery_zip) in row[2] and package.delivery_address.lower() in row[2].lower():
                         if row[0] not in good_rows_columns:
                             good_rows_columns.append(row[0])
-                            self.trip_delivery_locations_priority.append(
-                                list(row))
+                            self.trip_delivery_locations_priority.append(list(row))
+
+            if (len(self.priority_packages) > 0):
+                self.trip_delivery_locations_priority.insert(0, [0, *self.all_delivery_locations[0][1:]])
+                good_rows_columns.insert(0, 0)
 
             for i, row in enumerate(self.all_distance_matrix):
                 temp = []
@@ -290,13 +305,8 @@ class Truck:
                         self.trip_delivery_locations_regular.append(list(row))
                         packages.remove(package)
 
-        if self.priority_packages == None:
-            temp = []
-            for location in self.trip_delivery_locations_regular:
-                temp.append([location[0] + 1, location[1:]])
-
-            self.trip_delivery_locations_regular = temp
-            self.trip_delivery_locations_regular.insert(0, [0, [*self.all_delivery_locations[0][1:]]])
+        if len(self.regular_packages) > 0:
+            self.trip_delivery_locations_regular.insert(0, [0, *self.all_delivery_locations[0][1:]])
             good_rows_columns.insert(0, 0)
 
         for i, row in enumerate(self.all_distance_matrix):

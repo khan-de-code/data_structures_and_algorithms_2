@@ -82,6 +82,21 @@ class HashTable:
             if key == item[0]:
                 table_index_list.remove(item)
 
+    def values(self) -> [Any]:
+        """Returns a list of all values present in the hashtable.
+        """
+
+        if hasattr(self, 'iterable_table'):
+            return [value[1] for value in self.iterable_table]
+        else:
+            self.iterable_table = []
+
+            for i in self.table:
+                for x in i:
+                    self.iterable_table.append(x)
+
+            return [value[1] for value in self.iterable_table]
+
     def __resize(self):
         self.capacity = self.capacity * 2
         temp_store_for_values = []
