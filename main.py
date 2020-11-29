@@ -47,15 +47,9 @@ def main():
             print('The minute provided was not a valid minute. Please retry.')
             continue
 
-        if am_pm != 'AM':
-            if am_pm != 'PM':
-                print("AM or PM was not provided as 'AM' or 'PM'. Please retry.")
-                continue
-
-        if am_pm != 'PM':
-            if am_pm != 'AM':
-                print("AM or PM was not provided as 'AM' or 'PM'. Please retry.")
-                continue
+        if am_pm != 'AM' and am_pm != 'PM':
+            print("AM or PM was not provided as 'AM' or 'PM'. Please retry.")
+            continue
 
         time_to_check = Time(hour, minute, am_pm)
 
