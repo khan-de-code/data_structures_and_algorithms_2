@@ -73,6 +73,13 @@ for i, each in enumerate(final_delivery):
         print(f'You fucked up. {each} Is duplicated.')
 
 print(truck1.distance_traveled + truck2.distance_traveled)
+
+for package in packages:
+    package = packages.find(package)
+    if package.status != 'delivered':
+        print(package)
+else:
+    print('all delivered')
 # print('Finished first route for truck1', truck1.distance_traveled, truck1.time)
 # for each in __simplify([15, 16, 34]):
 #     print(each.delivered_time)

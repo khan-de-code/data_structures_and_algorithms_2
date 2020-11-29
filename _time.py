@@ -102,3 +102,46 @@ class Time:
         hour = self.hour if self.hour > 9 else f'0{self.hour}'
         minute = self.minute if self.minute > 9 else f'0{self.minute}'
         return f'{hour}:{minute} {self.am_pm}'
+
+    def __eq__(self, other):
+        if isinstance(other, Time):
+            return self.hour == other.hour and self.minute == other.minute and self.am_pm == other.am_pm
+        return False
+
+    def __gt__(self, other):
+        if isinstance(other, Time):
+            if self.am_pm == 'AM' and other.am_pm == 'PM':
+                return False
+            elif self.am_pm == 'PM' and other.am_pm == 'AM':
+                return True
+
+            if self.am_pm == other.am_pm:
+                if self.hour != other.hour:
+                    return self.hour > other.hour
+                elif self.minute != other.minute:
+                    return self.minute > other.minute
+
+            return False
+
+    def __ge__(self, other):
+        if isinstance(other, Time):
+            return self.__gt__(other) or self.__eq__(other)
+
+    def __lt__(self, other):
+        if isinstance(other, Time):
+            if self.am_pm == 'AM' and other.am_pm == 'PM':
+                return True
+            elif self.am_pm == 'PM' and other.am_pm == 'AM':
+                return False
+
+            if self.am_pm == other.am_pm:
+                if self.hour != other.hour:
+                    return self.hour < other.hour
+                elif self.minute != other.minute:
+                    return self.minute < other.minute
+
+            return False
+
+    def __le__(self, other):
+        if isinstance(other, Time):
+            return self.__lt__(other) or self.__eq__(other)
