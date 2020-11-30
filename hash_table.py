@@ -9,6 +9,18 @@ class HashTable:
     iterable_table: list
 
     def __init__(self, initial_capacity=10):
+        """Initializes the hash table.
+
+        Args:
+            initial_capacity (int, optional): Sets the initial number of sub arrays for the hash table. Defaults to 10.
+
+        Space & Time Complexity:
+            Time Complexity:
+                Big-O(N)
+            Space Complexity:
+                Big-O(N)
+        """
+
         self.table = []
         self.size = 0
         self.capacity = initial_capacity
@@ -17,9 +29,33 @@ class HashTable:
             self.table.append([])
 
     def __str__(self):
+        """The string value for this object.
+
+        Returns:
+            [[[ANY]]]: Returns the hash table as a string.
+
+        Space & Time Complexity:
+            Time Complexity:
+                Big-O(1)
+            Space Complexity:
+                Big-O(1)
+        """
+
         return f'{self.table}'
 
     def __iter__(self):
+        """Makes the object iterable.
+
+        Yields:
+            [ANY]: Yields each key in the hash table.
+
+        Space & Time Complexity:
+            Time Complexity:
+                Big-O(N^2)
+            Space Complexity:
+                Big-O(N)
+        """
+
         self.iterable_table = []
 
         for i in self.table:
@@ -35,6 +71,12 @@ class HashTable:
         Args:
             key (str): The key
             item ([Any]): The data paired with the key
+
+        Space & Time Complexity:
+            Time Complexity:
+                Big-O(N)
+            Space Complexity:
+                Big-O(N)
         """
 
         table_index = hash(key) % len(self.table)
@@ -58,6 +100,12 @@ class HashTable:
 
         Returns:
             [Any, None]: Returns the key pair if it exists or None if it does not.
+
+        Space & Time Complexity:
+            Time Complexity:
+                Big-O(N)
+            Space Complexity:
+                Big-O(1)
         """
 
         table_index = hash(key) % len(self.table)
@@ -74,6 +122,12 @@ class HashTable:
 
         Args:
             key (str): The key for the key pair you want to remove
+
+        Space & Time Complexity:
+            Time Complexity:
+                Big-O(N)
+            Space Complexity:
+                Big-O(1)
         """
         table_index = hash(key) % len(self.table)
         table_index_list = self.table[table_index]
@@ -84,6 +138,12 @@ class HashTable:
 
     def values(self) -> [Any]:
         """Returns a list of all values present in the hashtable.
+
+        Space & Time Complexity:
+            Time Complexity:
+                Big-O(N^2)
+            Space Complexity:
+                Big-O(N)
         """
 
         if hasattr(self, 'iterable_table'):
@@ -98,6 +158,13 @@ class HashTable:
             return [value[1] for value in self.iterable_table]
 
     def __resize(self):
+        """
+        Space & Time Complexity:
+            Time Complexity:
+                Big-O(N^2)
+            Space Complexity:
+                Big-O(N)
+        """
         self.capacity = self.capacity * 2
         temp_store_for_values = []
 

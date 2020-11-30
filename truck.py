@@ -1,5 +1,4 @@
 from package import Package
-from permute import permute
 from typing import Union
 from _time import Time
 from hash_table import HashTable
@@ -29,12 +28,24 @@ class Truck:
     trip_distance_matrix_priority: [[float]]
     trip_distance_matrix_regular: [[float]]
 
-    def __init__(self, number: int, regular_packages: [Package], all_delivery_locations, priority_packages=None, departure_time='default'):
+    def __init__(self, number: int, regular_packages: [Package], all_delivery_locations, priority_packages=None, departure_time=Time(8, 0, 'AM')):
+        """Initializes the truck.
 
-        if departure_time == 'default':
-            self.time = Time(8, 0, 'AM')
-        else:
-            self.time = departure_time
+        Args:
+            number (int): The number of the truck.
+            regular_packages ([Package]): The packages the truck starts with.
+            all_delivery_locations (Union[[str, int]]): The delivery locations for all packages to be delivered.
+            priority_packages ([Package], optional): The packages that must be delivered before all others. Defaults to None.
+            departure_time (Time, optional): The inital time the truck is to depart at. Defaults to `Time(8, 0, 'AM')`.
+
+        Space & Time Complexity:
+            Time Complexity:
+                Big-O(N^2)
+            Space Complexity:
+                Big-O(N^2)
+        """
+
+        self.time = departure_time
         self.number = number
         self.priority_packages = priority_packages
         self.regular_packages = regular_packages
@@ -81,6 +92,19 @@ class Truck:
             self.__set_delivery_locations()
 
     def load_packages(self, packages: [Package], type: str):
+        """Loads packages onto the truck after it has been initalized.
+
+        Args:
+            packages ([Package]): The list of packages to be loaded onto the truck.
+            type (str): Either 'regular' or 'priority' accepted. Determines if the list of packages provided are priority packages or not.
+
+        Space & Time Complexity:
+            Time Complexity:
+                Big-O(N)
+            Space Complexity:
+                Big-O(N)
+        """
+
         if type == 'regular':
             for package in packages:
                 self.regular_packages.append(package)
@@ -92,6 +116,21 @@ class Truck:
 
     def deliver_packages(self):
         def __calculate_minutes_travel(distance: float) -> float:
+            """Calculates the minutes it took to travel a provided distance.
+
+            Args:
+                distance (float): The distance traveled.
+
+            Returns:
+                float: The minutes and fractions of a minute it took to travel a provided distance.
+
+            Space & Time Complexity:
+                Time Complexity:
+                    Big-O(1)
+                Space Complexity:
+                    Big-O(1)
+            """
+
             return distance / (18 / 60)
 
         def nearest_neighbor(graph: Graph, start_vertex: Vertex, end_vertex: Union[Vertex, str], packages: [Package]):
@@ -104,6 +143,12 @@ class Truck:
 
             Returns:
                 (int, tuple[Vertex]): Returns the distance traveled and a tuple of the order of visited vertecies
+
+            Space & Time Complexity:
+                Time Complexity:
+                    Big-O(N^2)
+                Space Complexity:
+                    Big-O(N)
             """
 
             distance_traveled = 0
@@ -112,7 +157,22 @@ class Truck:
 
             current_vertex = start_vertex
 
-            def shortest_edge(from_vertex):
+            def shortest_edge(from_vertex: vertex):
+                """Determines the shortest edge when starting from the provided vertex.
+
+                Args:
+                    from_vertex (Vertex): The vertex to use to search for the shortest edge.
+
+                Returns:
+                    (Vertex, float): Returns a tuple of the shortest edge 'to vertex' and the edge length.
+
+                Space & Time Complexity:
+                    Time Complexity:
+                        Big-O(N)
+                    Space Complexity:
+                        Big-O(N)
+                """
+
                 current_vertex_neighbors = graph.adjacency_list.find(current_vertex)
                 shortest_edge_length = float('inf')
                 shortest_to_vertex = None
@@ -172,6 +232,22 @@ class Truck:
             return distance_traveled, tuple(vertecies_visited)
 
         def generate_graph(addresses: [str], distances: [float]) -> Graph:
+            """Generates a graph from the provided addresses and distances.
+
+            Args:
+                addresses ([str]): A list of addresses.
+                distances ([float]): A list of distances.
+
+            Returns:
+                Graph: The graph compiled from the provided addresses and distances.
+
+            Space & Time Complexity:
+                Time Complexity:
+                    Big-O(N^2)
+                Space Complexity:
+                    Big-O(N)
+            """
+
             graph = Graph()
             vertecies = []
             for address in addresses:
@@ -199,7 +275,7 @@ class Truck:
                 if vertex.name[2] == 'HUB':
                     hub_vertex = vertex
 
-            result = nearest_neighbor(regular_graph, hub_vertex, 'round trip', self.regular_packages)
+            nearest_neighbor(regular_graph, hub_vertex, 'round trip', self.regular_packages)
 
         elif len(regular_graph.vertecies_in_graph) == 0:
             hub_vertex = None
@@ -207,18 +283,13 @@ class Truck:
                 if vertex.name[2] == 'HUB':
                     hub_vertex = vertex
 
-            result = nearest_neighbor(priority_graph, hub_vertex, 'round trip', self.priority_packages)
+            nearest_neighbor(priority_graph, hub_vertex, 'round trip', self.priority_packages)
 
         else:
             hub_vertex_priority_start = None
             for vertex in priority_graph.vertecies_in_graph:
                 if vertex.name[2] == 'HUB':
                     hub_vertex_priority_start = vertex
-
-            hub_vertex_regular_end = None
-            for vertex in regular_graph.vertecies_in_graph:
-                if vertex.name[2] == 'HUB':
-                    hub_vertex_regular_end = vertex
 
             result_priority = nearest_neighbor(priority_graph, hub_vertex_priority_start, 'one way', self.priority_packages)
 
@@ -240,7 +311,7 @@ class Truck:
 
             hub_end = list(filter(lambda x: x.name[2] == 'HUB', regular_graph.vertecies_in_graph))[0]
 
-            result_regular = nearest_neighbor(regular_graph, last_priority_vertex, hub_end, self.regular_packages)
+            nearest_neighbor(regular_graph, last_priority_vertex, hub_end, self.regular_packages)
 
         self.priority_packages = []
         self.regular_packages = []
@@ -250,6 +321,15 @@ class Truck:
         self.trip_distance_matrix_regular = []
 
     def __set_delivery_locations(self):
+        """Sets the delivery locations for the packages provided.
+
+        Space & Time Complexity:
+            Time Complexity:
+                Big-O(N^2)
+            Space Complexity:
+                Big-O(N^2)
+        """
+
         self.trip_delivery_locations_regular = []
         self.trip_distance_matrix_regular = []
         self.trip_delivery_locations_priority = []

@@ -4,6 +4,18 @@ from package import Package
 
 
 def import_packages():
+    """Imports the packages from a csv file.
+
+    Returns:
+        HashTable: Returns a hash table with all packages from the csv in it.
+
+    Space & Time Complexity:
+        Time Complexity:
+            Big-O(N^2)
+        Space Complexity:
+            Big-O(N^2)
+    """
+
     packages = []
 
     with open('WGUPS Package File.csv', encoding='utf-8-sig', mode='r') as file:
@@ -25,6 +37,18 @@ def import_packages():
 
 
 def import_distances():
+    """Imports the distance matrix for each package destination.
+
+    Returns:
+        [[Union[str, float]]]: The matrix of package destinations.
+
+    Space & Time Complexity:
+        Time Complexity:
+            Big-O(N^2)
+        Space Complexity:
+            Big-O(N^2)
+    """
+
     distances = []
 
     with open('WGUPS Distance Table.csv', encoding='utf-8-sig', mode='r') as file:
