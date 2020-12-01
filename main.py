@@ -1,3 +1,5 @@
+# Created By: Dawson Batz 001111079
+
 from importer import import_packages, import_distances
 from truck import Truck
 from package import Package
@@ -28,6 +30,10 @@ def main():
     truck2.load_packages(delivery3, 'regular')
     truck2.deliver_packages()
 
+    print(f'\nDistance Travled By Truck 1: {round(truck1.distance_traveled, 2)}')
+    print(f'Distance travled by Truck 2: {round(truck2.distance_traveled, 2)}')
+    print(f'Total distance travled by all trucks: {round(truck1.distance_traveled + truck2.distance_traveled, 2)}')
+
     print('\nFinished setting up', end='\n\n')
 
     print('You can now query for the status of all packages at various times througout the day. To do so, please enter the time you would like to query below.')
@@ -56,9 +62,9 @@ def main():
         for package in packages:
             package = packages.find(package)
             if package.delivered_time > time_to_check:
-                print(f'Package: {package.package_id} in route')
+                print(f'Package: {package} Status: in route')
             elif package.delivered_time <= time_to_check:
-                print(f'Package: {package.package_id} delivered')
+                print(f'Package: {package} Status: delivered')
 
 
 if __name__ == '__main__':

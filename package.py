@@ -110,7 +110,7 @@ class Package():
                 Big-O(1)
         """
 
-        return f'{{ Package Id: {self.package_id}| Address: {self.delivery_address}, {self.delivery_city}, {self.delivery_state}, {self.delivery_zip}| Deadline: {self.delivery_deadline}| Weight: {self.weight}| Special Notes: {self.special_notes}| Status: {self.status} }}'
+        return f'{{ Package Id: {self.package_id}| Address: {self.delivery_address}, {self.delivery_city}, {self.delivery_state}, {self.delivery_zip}| Deadline: {self.delivery_deadline}| Weight: {self.weight}| Special Notes: {self.special_notes} }}'
 
     def delivered(self, time: Time):
         """Sets the package's delivered_time and status.

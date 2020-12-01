@@ -92,11 +92,11 @@ class HashTable:
         if self.size > self.capacity * self.resize_percentage:
             self.__resize()
 
-    def find(self, key: str) -> Union[Any, None]:
+    def find(self, key: Any) -> Union[Any, None]:
         """Finds any element in the hash table if it exists
 
         Args:
-            key (str): The key to search for
+            key (Any): The key to search for
 
         Returns:
             [Any, None]: Returns the key pair if it exists or None if it does not.
